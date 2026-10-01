@@ -70,6 +70,7 @@
     "@eslint/compat": "2.1.1",
     "@eslint/eslintrc": "3.3.7",
     "@eslint/js": "10.0.0",
+    "@jest/globals": "30.5.2",
     "@rollup/plugin-node-resolve": "16.0.3",
     "@rollup/plugin-replace": "6.0.3",
     "@rollup/plugin-typescript": "12.3.0",
