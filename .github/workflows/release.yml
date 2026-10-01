@@ -50,8 +50,11 @@ jobs:
           WEB_EXT_API_KEY: ${{ secrets.WEB_EXT_API_KEY }}
           WEB_EXT_API_SECRET: ${{ secrets.WEB_EXT_API_SECRET }}
         run: |
-          test -n "$WEB_EXT_API_KEY"
-          test -n "$WEB_EXT_API_SECRET"
+          if [[ -z "$WEB_EXT_API_KEY" || -z "$WEB_EXT_API_SECRET" ]]; then
+            echo "Firefox no se firmará: faltan los secretos de AMO."
+            echo "FIREFOX_SIGNED=false" >> "$GITHUB_ENV"
+            exit 0
+          fi
           VERSION="${GITHUB_REF_NAME#v}"
           pnpm dlx web-ext sign \
             --source-dir build/release/firefox \
@@ -62,6 +65,7 @@ jobs:
           XPI="$(find dist -maxdepth 1 -name '*.xpi' -print -quit)"
           test -n "$XPI"
           mv "$XPI" "dist/shiftnova-firefox-${VERSION}.xpi"
+          echo "FIREFOX_SIGNED=true" >> "$GITHUB_ENV"
       - name: Crear manifiestos y checksums
         shell: bash
         run: |
@@ -70,19 +74,25 @@ jobs:
           RELEASE_URL="https://github.com/danysers/ShiftNova/releases/tag/${GITHUB_REF_NAME}"
           FIREFOX_FILE="shiftnova-firefox-${VERSION}.xpi"
           CHROMIUM_FILE="shiftnova-chromium-${VERSION}.zip"
-          FIREFOX_HASH="$(sha256sum "dist/${FIREFOX_FILE}" | cut -d' ' -f1)"
-          (cd dist && sha256sum "${CHROMIUM_FILE}" "${FIREFOX_FILE}" > SHA256SUMS.txt)
-          VERSION="$VERSION" RELEASE_URL="$RELEASE_URL" RELEASE_BASE="$RELEASE_BASE" CHROMIUM_FILE="$CHROMIUM_FILE" FIREFOX_FILE="$FIREFOX_FILE" FIREFOX_HASH="$FIREFOX_HASH" node -e "const fs=require('fs'); fs.writeFileSync('pages/latest.json', JSON.stringify({version:process.env.VERSION,releaseURL:process.env.RELEASE_URL,chromiumURL:process.env.RELEASE_BASE+'/'+process.env.CHROMIUM_FILE,firefoxURL:process.env.RELEASE_BASE+'/'+process.env.FIREFOX_FILE,publishedAt:new Date().toISOString()},null,2)+'\n'); const id='shiftnova@danysers.github.io'; fs.writeFileSync('pages/updates.json', JSON.stringify({addons:{[id]:{updates:[{version:process.env.VERSION,update_link:process.env.RELEASE_BASE+'/'+process.env.FIREFOX_FILE,update_hash:'sha256:'+process.env.FIREFOX_HASH}]}}},null,2)+'\n')"
+          FIREFOX_URL="$RELEASE_URL"
+          FIREFOX_HASH=""
+          (cd dist && sha256sum "${CHROMIUM_FILE}" > SHA256SUMS.txt)
+          if [[ "$FIREFOX_SIGNED" == "true" ]]; then
+            FIREFOX_URL="${RELEASE_BASE}/${FIREFOX_FILE}"
+            FIREFOX_HASH="$(sha256sum "dist/${FIREFOX_FILE}" | cut -d' ' -f1)"
+            (cd dist && sha256sum "${FIREFOX_FILE}" >> SHA256SUMS.txt)
+          fi
+          VERSION="$VERSION" RELEASE_URL="$RELEASE_URL" RELEASE_BASE="$RELEASE_BASE" CHROMIUM_FILE="$CHROMIUM_FILE" FIREFOX_URL="$FIREFOX_URL" FIREFOX_FILE="$FIREFOX_FILE" FIREFOX_HASH="$FIREFOX_HASH" FIREFOX_SIGNED="$FIREFOX_SIGNED" node -e "const fs=require('fs'); const firefoxUpdate=process.env.FIREFOX_SIGNED==='true'?[{version:process.env.VERSION,update_link:process.env.RELEASE_BASE+'/'+process.env.FIREFOX_FILE,update_hash:'sha256:'+process.env.FIREFOX_HASH}]:[]; fs.writeFileSync('pages/latest.json', JSON.stringify({version:process.env.VERSION,releaseURL:process.env.RELEASE_URL,chromiumURL:process.env.RELEASE_BASE+'/'+process.env.CHROMIUM_FILE,firefoxURL:process.env.FIREFOX_URL,publishedAt:new Date().toISOString()},null,2)+'\n'); const id='shiftnova@danysers.github.io'; fs.writeFileSync('pages/updates.json', JSON.stringify({addons:{[id]:{updates:firefoxUpdate}}},null,2)+'\n')"
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
-            dist/*.zip
-            dist/*.xpi
-            dist/SHA256SUMS.txt
+            dist/*
             pages/latest.json
             pages/updates.json
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: pages
