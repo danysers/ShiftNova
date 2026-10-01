@@ -22,7 +22,9 @@
 
 ## ✨ ¿Para qué sirve?
 
-ShiftNova es una extensión de escritorio que cambia la apariencia de SIGAPP, SIARH e IDE según la dirección que estés visitando. Así puedes distinguir a simple vista producción, pruebas y desarrollo, reducir errores por confusión de entorno y elegir una vista clara u oscura más cómoda.
+ShiftNova es una extensión para personalizar la apariencia de cualquier página web mediante perfiles de color. Puedes crear una configuración diferente para cada sitio, elegir entre una vista clara u oscura y adaptar los tonos para trabajar con mayor comodidad.
+
+En el ámbito laboral también puede utilizarse para identificar visualmente distintos entornos, por ejemplo desarrollo, pruebas y producción. Asignar un color a cada uno ayuda a reconocerlos de inmediato y a reducir confusiones, sin cambiar el funcionamiento ni el contenido de las páginas.
 
 - 🎨 Asigna un color diferente a cada sitio o sección.
 - 🌙 Incluye modo claro, oscuro, automático según el sistema y por horario.
@@ -35,19 +37,15 @@ ShiftNova es una extensión de escritorio que cambia la apariencia de SIGAPP, SI
 > [!IMPORTANT]
 > ShiftNova sólo cambia la apariencia. No modifica datos, no crea registros y no realiza operaciones dentro de los sistemas.
 
-## 🧭 Entornos preparados
+## 🧭 Formas de usarlo
 
-ShiftNova ya incluye estos perfiles y también permite crear otros desde la dirección actual:
+- Personaliza tus páginas habituales con colores más cómodos o fáciles de reconocer.
+- Crea perfiles independientes para diferentes sitios o secciones de un mismo sitio.
+- Asigna colores distintos a los entornos de desarrollo, pruebas y producción de tu lugar de trabajo.
+- Usa el modo oscuro durante la noche y el modo claro durante el día.
+- Comparte tu configuración exportándola e importándola en otra computadora.
 
-| Entorno | Dirección | Identificación inicial |
-| --- | --- | --- |
-| SIGAPP Producción | `sigapp.formosa.gob.ar` | Gris claro |
-| SIARH Prueba | `pruebasiarh.formosa.gob.ar` | Celeste |
-| SIARH Prueba v3 | `pruebasiarhv3.formosa.gob.ar` | Celeste |
-| IDE | `ide.formosa.gob.ar` | Gris claro |
-| SIGAPP Desarrollo | `desasigappv2.formosa.gob.ar` | Amarillo claro |
-
-Los sitios que no tengan un perfil habilitado se verán exactamente como antes.
+Cada persona puede crear, editar o desactivar sus propios perfiles. Los sitios que no tengan un perfil habilitado se verán exactamente como antes.
 
 ## 📥 Instalación
 
@@ -121,4 +119,4 @@ ShiftNova trabaja dentro del navegador y guarda la configuración localmente. No
 
 ShiftNova nació inspirada en [Dark Reader](https://github.com/darkreader/darkreader), creado por **Alexander Shutau** y desarrollado junto con su comunidad de colaboradores. Agradecemos sinceramente ese trabajo, que hizo posible explorar una experiencia visual más cómoda y sirvió como punto de partida para este proyecto.
 
-ShiftNova adapta partes de su motor de tematización, distribuidas bajo la licencia MIT, y construye sobre ellas una experiencia propia orientada a perfiles por entorno y a los sistemas de Formosa. El reconocimiento y los avisos correspondientes se conservan en el archivo [LICENSE](LICENSE).
+ShiftNova adapta partes de su motor de tematización, distribuidas bajo la licencia MIT, y construye sobre ellas una experiencia propia basada en perfiles de color para cualquier sitio web. El reconocimiento y los avisos correspondientes se conservan en el archivo [LICENSE](LICENSE).
