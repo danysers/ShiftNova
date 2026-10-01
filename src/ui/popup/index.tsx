@@ -10,6 +10,17 @@ let data: ExtensionData;
 let releaseManifest: ShiftNovaReleaseManifest | null = null;
 let updateMessage = 'Todavía no se comprobó la versión publicada.';
 let formMessage = '';
+let ignoreReportsUntil = 0;
+let colorSaveTimer: number | null = null;
+
+function showFormMessage(message: string): void {
+    formMessage = message;
+    const element = document.querySelector<HTMLParagraphElement>('#form-message');
+    if (element) {
+        element.textContent = message;
+        element.hidden = !message;
+    }
+}
 
 function escapeHTML(value: unknown): string {
     return String(value ?? '')
@@ -40,25 +51,30 @@ function getCurrentURL(): URL | null {
     }
 }
 
-function saveShiftNova(next: ShiftNovaSettings, message = 'Configuración guardada.'): boolean {
+function saveShiftNova(next: ShiftNovaSettings, message = 'Configuración guardada.', rerender = true): boolean {
     const validation = validateShiftNovaSettings(next);
     if (validation.errors.length > 0) {
-        formMessage = validation.errors[0];
-        render();
+        showFormMessage(validation.errors[0]);
+        if (rerender) {
+            render();
+        }
         return false;
     }
     data.settings.shiftNova = validation.settings;
-    formMessage = message;
+    showFormMessage(message);
+    ignoreReportsUntil = Date.now() + 1500;
     connector.changeSettings({shiftNova: validation.settings});
-    render();
+    if (rerender) {
+        render();
+    }
     return true;
 }
 
 function saveTime(time: TimeSettings): void {
     data.settings.time = time;
+    ignoreReportsUntil = Date.now() + 1500;
     connector.changeSettings({time});
-    formMessage = 'Horario guardado.';
-    render();
+    showFormMessage('Horario guardado.');
 }
 
 function profileMarkup(profile: SiteProfile, index: number): string {
@@ -136,7 +152,7 @@ function render(): void {
                 ` : currentURL ? '<button id="create-current">Crear perfil para esta URL</button>' : ''}
             </section>
 
-            ${formMessage ? `<p class="message" role="status">${escapeHTML(formMessage)}</p>` : ''}
+            <p class="message" id="form-message" role="status" ${formMessage ? '' : 'hidden'}>${escapeHTML(formMessage)}</p>
 
             <details open>
                 <summary>Perfiles de entorno <span>${data.settings.shiftNova.profiles.length}</span></summary>
@@ -201,7 +217,7 @@ function bindEvents(currentProfile: SiteProfile | null): void {
         const next = cloneSettings();
         const profile = next.profiles.find(({id}) => id === currentProfile.id)!;
         profile.enabled = (event.target as HTMLInputElement).checked;
-        saveShiftNova(next);
+        saveShiftNova(next, 'Configuración guardada.', false);
     });
     document.querySelector('#create-current')?.addEventListener('click', createProfileFromCurrentURL);
     document.querySelector('#add-profile')?.addEventListener('click', () => addProfile(null));
@@ -212,7 +228,16 @@ function bindEvents(currentProfile: SiteProfile | null): void {
     });
 
     document.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-profile][data-field]').forEach((input) => {
-        input.addEventListener('change', () => updateProfileField(input));
+        if (input instanceof HTMLInputElement && input.type === 'color') {
+            input.addEventListener('input', () => scheduleColorSave(input));
+        }
+        input.addEventListener('change', () => {
+            if (colorSaveTimer !== null) {
+                window.clearTimeout(colorSaveTimer);
+                colorSaveTimer = null;
+            }
+            updateProfileField(input, false);
+        });
     });
     document.querySelectorAll<HTMLButtonElement>('[data-action][data-profile]').forEach((button) => {
         button.addEventListener('click', () => runProfileAction(button.dataset.action!, button.dataset.profile!));
@@ -225,7 +250,7 @@ function bindEvents(currentProfile: SiteProfile | null): void {
             const next = cloneSettings();
             const key = input.dataset.darkField as keyof ShiftNovaSettings['darkTheme'];
             next.darkTheme[key] = Number(input.value);
-            saveShiftNova(next, 'Ajustes del modo oscuro guardados.');
+            saveShiftNova(next, 'Ajustes del modo oscuro guardados.', false);
         });
     });
     document.querySelector('#schedule-start')?.addEventListener('change', saveSchedule);
@@ -237,7 +262,7 @@ function bindEvents(currentProfile: SiteProfile | null): void {
     document.querySelector('#check-on-open')?.addEventListener('change', (event) => {
         const next = cloneSettings();
         next.updates.checkOnPopupOpen = (event.target as HTMLInputElement).checked;
-        saveShiftNova(next);
+        saveShiftNova(next, 'Configuración guardada.', false);
     });
     document.querySelector('#open-release')?.addEventListener('click', () => releaseManifest && chrome.tabs.create({url: releaseManifest.releaseURL}));
     document.querySelector('#download-update')?.addEventListener('click', () => {
@@ -270,7 +295,17 @@ function createProfileFromCurrentURL(): void {
     }
 }
 
-function updateProfileField(input: HTMLInputElement | HTMLSelectElement): void {
+function scheduleColorSave(input: HTMLInputElement): void {
+    if (colorSaveTimer !== null) {
+        window.clearTimeout(colorSaveTimer);
+    }
+    colorSaveTimer = window.setTimeout(() => {
+        colorSaveTimer = null;
+        updateProfileField(input, false);
+    }, 120);
+}
+
+function updateProfileField(input: HTMLInputElement | HTMLSelectElement, rerender = false): void {
     const next = cloneSettings();
     const profile = next.profiles.find(({id}) => id === input.dataset.profile);
     if (!profile) {
@@ -281,8 +316,10 @@ function updateProfileField(input: HTMLInputElement | HTMLSelectElement): void {
         profile.enabled = (input as HTMLInputElement).checked;
     } else if (field === 'hostname') {
         profile.hostname = normalizeHostname(input.value);
+        input.value = profile.hostname;
     } else if (field === 'pathPrefix') {
         profile.pathPrefix = normalizePathPrefix(input.value);
+        input.value = profile.pathPrefix;
     } else if (field === 'appearance') {
         profile.appearance = input.value as SiteProfile['appearance'];
     } else if (field === 'name') {
@@ -296,7 +333,7 @@ function updateProfileField(input: HTMLInputElement | HTMLSelectElement): void {
             delete profile.palette[key];
         }
     }
-    saveShiftNova(next);
+    saveShiftNova(next, 'Configuración guardada.', rerender);
 }
 
 function runProfileAction(action: string, id: string): void {
@@ -353,6 +390,7 @@ async function importSettings(event: Event): Promise<void> {
             throw new Error(validation.errors.join(' '));
         }
         data.settings.shiftNova = validation.settings;
+        ignoreReportsUntil = Date.now() + 1500;
         connector.changeSettings({shiftNova: validation.settings, ...(parsed.time ? {time: parsed.time} : {})});
         if (parsed.time) {
             data.settings.time = parsed.time;
@@ -382,6 +420,7 @@ async function checkUpdates(): Promise<void> {
         const next = cloneSettings();
         next.updates.knownVersion = parsed.version;
         data.settings.shiftNova = next;
+        ignoreReportsUntil = Date.now() + 1500;
         connector.changeSettings({shiftNova: next});
     } catch (error) {
         updateMessage = `No se pudo comprobar la actualización. La extensión seguirá funcionando sin conexión (${error instanceof Error ? error.message : String(error)}).`;
@@ -393,8 +432,13 @@ async function start(): Promise<void> {
     data = await connector.getData();
     render();
     connector.subscribeToChanges((next) => {
+        const activeTabChanged = next.activeTab.url !== data.activeTab.url;
+        const settingsChanged = JSON.stringify(next.settings.shiftNova) !== JSON.stringify(data.settings.shiftNova) ||
+            JSON.stringify(next.settings.time) !== JSON.stringify(data.settings.time);
         data = next;
-        render();
+        if (Date.now() >= ignoreReportsUntil && (activeTabChanged || settingsChanged)) {
+            render();
+        }
     });
     if (data.settings.shiftNova.updates.checkOnPopupOpen) {
         await checkUpdates();

@@ -88,24 +88,24 @@ export function derivePalette(palette: SemanticPalette, dark: boolean): DerivedP
             input: mixColors(canvas, '#FFFFFF', 0.09),
         };
     }
-    const canvas = palette.canvas || mixColors(base, '#FFFFFF', 0.76);
-    const panels = palette.panels || mixColors(base, '#FFFFFF', 0.88);
+    const canvas = palette.canvas || mixColors(base, '#FFFFFF', 0.38);
+    const panels = palette.panels || mixColors(base, '#FFFFFF', 0.62);
     const accent = palette.accent || mixColors(base, '#1976D2', 0.58);
     return {
         base,
-        header: palette.header || mixColors(base, '#FFFFFF', 0.46),
-        sidebar: palette.sidebar || mixColors(base, '#FFFFFF', 0.30),
+        header: palette.header || mixColors(base, '#FFFFFF', 0.22),
+        sidebar: palette.sidebar || mixColors(base, '#FFFFFF', 0.12),
         canvas,
-        content: mixColors(base, '#FFFFFF', 0.94),
+        content: mixColors(base, '#FFFFFF', 0.50),
         panels,
-        actionBar: mixColors(base, '#FFFFFF', 0.72),
-        activeTab: mixColors(base, '#FFFFFF', 0.38),
-        border: mixColors(base, '#64748B', 0.42),
-        hover: mixColors(base, '#FFFFFF', 0.18),
+        actionBar: mixColors(base, '#FFFFFF', 0.36),
+        activeTab: mixColors(base, '#FFFFFF', 0.10),
+        border: mixColors(base, '#64748B', 0.32),
+        hover: mixColors(base, '#FFFFFF', 0.08),
         focus: accent,
         accent,
         text: getAccessibleText(panels),
         mutedText: '#475569',
-        input: '#FFFFFF',
+        input: mixColors(base, '#FFFFFF', 0.82),
     };
 }

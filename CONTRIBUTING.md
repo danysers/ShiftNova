@@ -11,10 +11,10 @@ Las contribuciones deben conservar estas garantías:
 ## Preparación
 
 ```bash
-npm ci
-npm run test:unit -- --runInBand
-npm run lint
-npm run build:dist
+pnpm install --frozen-lockfile
+pnpm run test:unit -- --runInBand
+pnpm run lint
+pnpm run build:dist
 ```
 
 Incluye pruebas unitarias cuando cambies perfiles, validación, paletas, apariencia o actualizaciones. Para cambios visuales, valida al menos la página de inicio y los módulos de Embargos indicados en el README.

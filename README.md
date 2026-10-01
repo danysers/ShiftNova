@@ -37,13 +37,13 @@ El motor de modo oscuro deriva de Dark Reader 4.9.133. La interfaz, el modelo de
 
 ## Desarrollo
 
-Requisitos: Node.js 24 y npm 11 o compatibles.
+Requisitos: Node.js 24 y pnpm 11.
 
 ```bash
-npm ci
-npm run test:unit -- --runInBand
-npm run lint
-npm run build:dist
+pnpm install --frozen-lockfile
+pnpm run test:unit -- --runInBand
+pnpm run lint
+pnpm run build:dist
 ```
 
 Los paquetes sin comprimir quedan en:
@@ -54,7 +54,7 @@ Los paquetes sin comprimir quedan en:
 Para desarrollo rápido de Chromium:
 
 ```bash
-npm run debug:watch:mv3
+pnpm run debug:watch:mv3
 ```
 
 Luego se carga `build/debug/chrome-mv3` desde la página de extensiones con el modo desarrollador habilitado.

@@ -8,6 +8,13 @@ describe('ShiftNova semantic palette', () => {
         }
     });
 
+    test('keeps the light environment color visible across the main surfaces', () => {
+        const palette = derivePalette({base: '#C5D6FF'}, false);
+        expect(palette.canvas).toBe('#DBE6FF');
+        expect(palette.panels).toBe('#E9EFFF');
+        expect(palette.sidebar).toBe('#CCDBFF');
+    });
+
     test('chooses the text color with the greatest contrast', () => {
         expect(getAccessibleText('#FFFFFF')).toBe('#10212B');
         expect(getAccessibleText('#101010')).toBe('#F8FAFC');

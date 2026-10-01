@@ -1,3 +1,10 @@
+# ShiftNova 1.0.1 (1 de octubre de 2026)
+
+- Refuerza la paleta clara y cubre superficies FlexGrid, FlexForm, navegación y contenido dinámico de SIARH.
+- Evita que el popup se vuelva a construir mientras el selector de color está abierto.
+- Actualiza el logotipo interior y los iconos del navegador con los nuevos recursos ShiftNova.
+- Migra la instalación, los scripts y la automatización de CI a pnpm.
+
 # ShiftNova 1.0.0 (1 de octubre de 2026)
 
 - Primera versión multientorno con perfiles por dominio y ruta.
