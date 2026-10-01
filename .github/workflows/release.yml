@@ -35,7 +35,7 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           PACKAGE_VERSION="$(node -p "require('./package.json').version")"
           test "$VERSION" = "$PACKAGE_VERSION"
-      - run: pnpm run test:unit -- --runInBand
+      - run: pnpm exec jest --config=tests/unit/jest.config.mjs --runInBand
       - run: pnpm run lint
       - run: pnpm run build:dist
       - name: Empaquetar Chromium

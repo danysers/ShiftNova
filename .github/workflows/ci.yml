@@ -22,7 +22,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run test:unit -- --runInBand
+      - run: pnpm exec jest --config=tests/unit/jest.config.mjs --runInBand
       - run: pnpm run lint
       - run: pnpm run build:dist
       - uses: actions/upload-artifact@v4
