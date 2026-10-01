@@ -1,6 +1,7 @@
-import type {ExtensionData, SemanticPalette, ShiftNovaSettings, SiteProfile, TimeSettings} from '../../definitions';
+import type {ExtensionData, SemanticPalette, ShiftNovaSettings, SiteProfile, SurfaceTarget, TimeSettings} from '../../definitions';
 import {findMatchingProfile, normalizeHostname, normalizePathPrefix, validateShiftNovaSettings} from '../../shiftnova/config';
 import {createDefaultShiftNovaSettings} from '../../shiftnova/defaults';
+import {SURFACE_OPTIONS} from '../../shiftnova/surfaces';
 import {compareVersions, getUpdateAction, parseReleaseManifest} from '../../shiftnova/update';
 import type {ShiftNovaReleaseManifest} from '../../shiftnova/update';
 import Connector from '../connect/connector';
@@ -57,6 +58,25 @@ function createID(): string {
         return globalThis.crypto.randomUUID();
     }
     return `perfil-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function surfaceOverrideMarkup(profile: SiteProfile, surfaceID: string): string {
+    const override = profile.surfaceOverrides.find(({id}) => id === surfaceID)!;
+    const options = SURFACE_OPTIONS.map(({value, label}) => `<option value="${value}" ${override.target === value ? 'selected' : ''}>${label}</option>`).join('');
+    return `
+        <div class="surface-override" data-surface-row="${escapeHTML(override.id)}">
+            <label class="field"><span>Elemento</span>
+                <select data-profile="${escapeHTML(profile.id)}" data-surface="${escapeHTML(override.id)}" data-surface-field="target">${options}</select>
+            </label>
+            <label class="field field--color"><span>Color</span>
+                <input type="color" data-profile="${escapeHTML(profile.id)}" data-surface="${escapeHTML(override.id)}" data-surface-field="color" value="${escapeHTML(override.color)}" />
+            </label>
+            ${override.target === 'custom' ? `
+                <label class="field surface-selector"><span>Selector CSS</span>
+                    <input data-profile="${escapeHTML(profile.id)}" data-surface="${escapeHTML(override.id)}" data-surface-field="selector" value="${escapeHTML(override.selector || '')}" placeholder=".clase o #identificador" />
+                </label>` : ''}
+            <button class="danger surface-delete" data-delete-surface="${escapeHTML(override.id)}" data-profile="${escapeHTML(profile.id)}" type="button">Quitar</button>
+        </div>`;
 }
 
 function getCurrentURL(): URL | null {
@@ -123,17 +143,34 @@ function profileMarkup(profile: SiteProfile, index: number): string {
                 </label>
                 <label class="field field--color"><span>Color base</span><input type="color" data-profile="${escapeHTML(profile.id)}" data-field="palette.base" value="${escapeHTML(profile.palette.base)}" /></label>
             </div>
-            <details class="advanced">
+            <details class="advanced" ${profile.surfaceOverrides.length > 0 ? 'open' : ''}>
                 <summary>Superficies avanzadas</summary>
                 <div class="grid grid--two">
                     ${colorInput('header', 'Cabecera')}
                     ${colorInput('sidebar', 'Árbol lateral')}
                     ${colorInput('canvas', 'Lienzo')}
+                    ${colorInput('content', 'Contenido')}
                     ${colorInput('panels', 'Paneles')}
+                    ${colorInput('actionBar', 'Barras de acciones')}
+                    ${colorInput('activeTab', 'Pestaña activa')}
+                    ${colorInput('border', 'Bordes')}
+                    ${colorInput('hover', 'Al pasar el cursor')}
+                    ${colorInput('focus', 'Foco')}
+                    ${colorInput('input', 'Campos')}
                     ${colorInput('accent', 'Acento')}
+                </div>
+                <div class="surface-overrides">
+                    <div class="surface-overrides__heading">
+                        <strong>Elementos adicionales</strong>
+                        <span>${profile.surfaceOverrides.length}</span>
+                    </div>
+                    <p class="hint">Agrega una zona y elige un color. Usa “Selector personalizado” sólo cuando necesites apuntar a un componente específico.</p>
+                    ${profile.surfaceOverrides.map(({id}) => surfaceOverrideMarkup(profile, id)).join('')}
+                    <button class="wide secondary" data-add-surface="${escapeHTML(profile.id)}" type="button">+ Agregar elemento</button>
                 </div>
             </details>
             <div class="profile-actions">
+                <button class="profile-save" data-action="save" data-profile="${escapeHTML(profile.id)}">✓ Guardar cambios</button>
                 <button data-action="up" data-profile="${escapeHTML(profile.id)}" ${index === 0 ? 'disabled' : ''} aria-label="Subir perfil">↑</button>
                 <button data-action="down" data-profile="${escapeHTML(profile.id)}" ${index === data.settings.shiftNova.profiles.length - 1 ? 'disabled' : ''} aria-label="Bajar perfil">↓</button>
                 <button data-action="duplicate" data-profile="${escapeHTML(profile.id)}">Duplicar</button>
@@ -279,6 +316,15 @@ function bindEvents(currentProfile: SiteProfile | null): void {
     document.querySelectorAll<HTMLButtonElement>('[data-action][data-profile]').forEach((button) => {
         button.addEventListener('click', () => runProfileAction(button.dataset.action!, button.dataset.profile!));
     });
+    document.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-surface][data-surface-field]').forEach((input) => {
+        input.addEventListener('change', () => updateSurfaceField(input, input.dataset.surfaceField === 'target'));
+    });
+    document.querySelectorAll<HTMLButtonElement>('[data-add-surface]').forEach((button) => {
+        button.addEventListener('click', () => addSurfaceOverride(button.dataset.addSurface!));
+    });
+    document.querySelectorAll<HTMLButtonElement>('[data-delete-surface]').forEach((button) => {
+        button.addEventListener('click', () => deleteSurfaceOverride(button.dataset.profile!, button.dataset.deleteSurface!));
+    });
     document.querySelectorAll<HTMLInputElement>('[data-dark-field]').forEach((input) => {
         input.addEventListener('input', () => {
             input.nextElementSibling!.textContent = `${input.value}%`;
@@ -324,6 +370,7 @@ function addProfile(url: URL | null): void {
         pathPrefix: url ? normalizePathPrefix(url.pathname) : '/',
         appearance: 'light',
         palette: {base: '#C5D6FF'},
+        surfaceOverrides: [],
     });
     saveShiftNova(next, 'Perfil creado.');
 }
@@ -347,6 +394,11 @@ function scheduleColorSave(input: HTMLInputElement): void {
 
 function updateProfileField(input: HTMLInputElement | HTMLSelectElement, rerender = false): void {
     const next = cloneSettings();
+    applyProfileField(next, input);
+    saveShiftNova(next, 'Configuración guardada.', rerender);
+}
+
+function applyProfileField(next: ShiftNovaSettings, input: HTMLInputElement | HTMLSelectElement): void {
     const profile = next.profiles.find(({id}) => id === input.dataset.profile);
     if (!profile) {
         return;
@@ -373,10 +425,78 @@ function updateProfileField(input: HTMLInputElement | HTMLSelectElement, rerende
             delete profile.palette[key];
         }
     }
-    saveShiftNova(next, 'Configuración guardada.', rerender);
+}
+
+function applySurfaceField(next: ShiftNovaSettings, input: HTMLInputElement | HTMLSelectElement): void {
+    const profile = next.profiles.find(({id}) => id === input.dataset.profile);
+    const override = profile?.surfaceOverrides.find(({id}) => id === input.dataset.surface);
+    if (!override) {
+        return;
+    }
+    const field = input.dataset.surfaceField;
+    if (field === 'target') {
+        override.target = input.value as SurfaceTarget;
+        if (override.target === 'custom' && !override.selector) {
+            override.selector = '.mi-elemento';
+        } else if (override.target !== 'custom') {
+            delete override.selector;
+        }
+    } else if (field === 'color') {
+        override.color = input.value.toUpperCase();
+    } else if (field === 'selector') {
+        override.selector = input.value.trim();
+    }
+}
+
+function updateSurfaceField(input: HTMLInputElement | HTMLSelectElement, rerender = false): void {
+    const next = cloneSettings();
+    applySurfaceField(next, input);
+    saveShiftNova(next, 'Elemento actualizado.', rerender);
+}
+
+function saveProfileFromCard(id: string): void {
+    const card = document.querySelector<HTMLElement>(`[data-profile-card="${CSS.escape(id)}"]`);
+    if (!card) {
+        return;
+    }
+    const next = cloneSettings();
+    card.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-profile][data-field]').forEach((input) => applyProfileField(next, input));
+    card.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-surface][data-surface-field]').forEach((input) => applySurfaceField(next, input));
+    saveShiftNova(next, 'Perfil guardado correctamente.', false);
+}
+
+function addSurfaceOverride(profileID: string): void {
+    const next = cloneSettings();
+    const profile = next.profiles.find(({id}) => id === profileID);
+    if (!profile) {
+        return;
+    }
+    const usedTargets = new Set(profile.surfaceOverrides.map(({target}) => target));
+    const target = SURFACE_OPTIONS.find(({value}) => value === 'custom' || !usedTargets.has(value))?.value || 'custom';
+    profile.surfaceOverrides.push({
+        id: createID(),
+        target,
+        color: profile.palette.base,
+        ...(target === 'custom' ? {selector: '.mi-elemento'} : {}),
+    });
+    saveShiftNova(next, 'Elemento agregado. Elige su tipo y color.');
+}
+
+function deleteSurfaceOverride(profileID: string, surfaceID: string): void {
+    const next = cloneSettings();
+    const profile = next.profiles.find(({id}) => id === profileID);
+    if (!profile) {
+        return;
+    }
+    profile.surfaceOverrides = profile.surfaceOverrides.filter(({id}) => id !== surfaceID);
+    saveShiftNova(next, 'Elemento eliminado.');
 }
 
 function runProfileAction(action: string, id: string): void {
+    if (action === 'save') {
+        saveProfileFromCard(id);
+        return;
+    }
     const next = cloneSettings();
     const index = next.profiles.findIndex((profile) => profile.id === id);
     if (index < 0) {

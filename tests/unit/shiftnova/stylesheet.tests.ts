@@ -16,4 +16,15 @@ describe('ShiftNova SIARH stylesheet', () => {
         expect(css).toContain(':not(:where(.success, .danger, .warning, .info, .cazul');
         expect(css).toContain('.trSelected');
     });
+
+    test('adds safe color rules for predefined and custom elements', () => {
+        const css = createSemanticStylesheet(derivePalette({base: '#C5D6FF'}, false), false, [
+            {id: 'tabs', target: 'tabs', color: '#112233'},
+            {id: 'custom', target: 'custom', color: '#F5F5F5', selector: '.componente-especial'},
+        ]);
+        expect(css).toContain('.nav-tabs');
+        expect(css).toContain('background-color: #112233 !important');
+        expect(css).toContain('.componente-especial');
+        expect(css).toContain('background-color: #F5F5F5 !important');
+    });
 });

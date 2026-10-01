@@ -34,6 +34,7 @@ En el ámbito laboral también puede utilizarse para identificar visualmente dis
 - 💾 Permite exportar tus perfiles e importarlos en otra computadora.
 - 🔔 Comprueba si existe una versión nueva al abrir la extensión.
 - 🛟 Incluye accesos para reportar errores y proponer mejoras.
+- 🧱 Permite colorear por separado pestañas, tablas, formularios, ventanas, campos, barras y otros elementos.
 
 > [!IMPORTANT]
 > ShiftNova sólo cambia la apariencia. No modifica datos, no crea registros y no realiza operaciones dentro de los sistemas.

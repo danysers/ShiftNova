@@ -107,8 +107,9 @@ summary > span { float: right; padding: 1px 7px; border-radius: 999px; backgroun
 .profile-card__title { display: grid; grid-template-columns: 24px 1fr auto; gap: 7px; align-items: center; margin-bottom: 9px; }
 .profile-index { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #2b1114; color: #ff8c91; font-weight: 800; }
 .profile-name { font-size: 14px; font-weight: 750; }
-.profile-actions { display: flex; gap: 6px; margin-top: 9px; }
+.profile-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
 .profile-actions button { min-height: 29px; padding: 4px 8px; font-size: 11px; }
+.profile-actions .profile-save { flex: 1 0 100%; min-height: 34px; font-size: 12px; }
 
 .grid { display: grid; gap: 8px; }
 .grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -127,6 +128,22 @@ summary > span { float: right; padding: 1px 7px; border-radius: 999px; backgroun
 .advanced { margin-top: 9px; background: @surface-2; }
 .advanced summary { padding: 8px 9px; color: @muted; font-size: 11px; }
 .advanced .grid { padding: 0 8px 8px; }
+.surface-overrides { padding: 9px 8px 8px; border-top: 1px solid @border; }
+.surface-overrides__heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.surface-overrides__heading span { padding: 1px 7px; border-radius: 999px; background: @surface; color: @muted; font-size: 10px; }
+.surface-override {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 72px auto;
+    gap: 7px;
+    align-items: end;
+    padding: 8px;
+    margin-bottom: 8px;
+    border: 1px solid @border;
+    border-radius: 8px;
+    background: @surface;
+}
+.surface-selector { grid-column: 1 / -2; }
+.surface-delete { min-height: 32px; padding: 5px 8px; }
 
 .switch input { position: absolute; opacity: 0; }
 .switch span { display: block; width: 34px; height: 20px; padding: 2px; border-radius: 999px; background: #3b444e; cursor: pointer; }
@@ -156,4 +173,7 @@ summary > span { float: right; padding: 1px 7px; border-radius: 999px; backgroun
     html, body { width: 100vw; min-width: 320px; }
     .grid--two { grid-template-columns: 1fr; }
     .range { grid-template-columns: 94px 1fr 38px; }
+    .surface-override { grid-template-columns: minmax(0, 1fr) 64px; }
+    .surface-delete { grid-column: 1 / -1; }
+    .surface-selector { grid-column: 1 / -1; }
 }

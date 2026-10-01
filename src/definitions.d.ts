@@ -13,8 +13,24 @@ export interface SemanticPalette {
     header?: string;
     sidebar?: string;
     canvas?: string;
+    content?: string;
     panels?: string;
+    actionBar?: string;
+    activeTab?: string;
+    border?: string;
+    hover?: string;
+    focus?: string;
+    input?: string;
     accent?: string;
+}
+
+export type SurfaceTarget = 'tabs' | 'tables' | 'forms' | 'modals' | 'fields' | 'toolbars' | 'buttons' | 'custom';
+
+export interface SurfaceOverride {
+    id: string;
+    target: SurfaceTarget;
+    color: string;
+    selector?: string;
 }
 
 export interface DarkThemeSettings {
@@ -38,6 +54,7 @@ export interface SiteProfile {
     pathPrefix: string;
     appearance: AppearanceMode;
     palette: SemanticPalette;
+    surfaceOverrides: SurfaceOverride[];
 }
 
 export interface ShiftNovaSettings {

@@ -1,3 +1,11 @@
+# ShiftNova 1.0.3 (1 de octubre de 2026)
+
+- Añade un botón visible para guardar todos los cambios de cada perfil.
+- Amplía las superficies avanzadas con contenido, acciones, pestañas, bordes, estados y campos.
+- Permite agregar colores independientes para pestañas, tablas, formularios, modales, campos, barras y botones.
+- Incorpora selectores personalizados validados para componentes especiales.
+- Migra automáticamente los perfiles guardados al nuevo formato sin perder su configuración.
+
 # ShiftNova 1.0.2 (1 de octubre de 2026)
 
 - Corrige el desplazamiento excesivo del popup al cerrar secciones o actualizar su contenido.

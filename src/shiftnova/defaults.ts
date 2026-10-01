@@ -1,6 +1,6 @@
 import type {ShiftNovaSettings, SiteProfile} from '../definitions';
 
-export const SHIFTNOVA_SCHEMA_VERSION = 1;
+export const SHIFTNOVA_SCHEMA_VERSION = 2;
 export const SHIFTNOVA_UPDATE_MANIFEST_URL = 'https://danysers.github.io/ShiftNova/latest.json';
 
 export const DEFAULT_SITE_PROFILES: SiteProfile[] = [
@@ -20,6 +20,7 @@ function createDefaultProfile(id: string, name: string, hostname: string, base: 
         pathPrefix: '/',
         appearance: 'light',
         palette: {base},
+        surfaceOverrides: [],
     };
 }
 

@@ -30,4 +30,18 @@ describe('ShiftNova profile configuration', () => {
         expect(isAppearanceDark('schedule', false, time, new Date(2026, 0, 1, 23, 0))).toBe(true);
         expect(isAppearanceDark('schedule', false, time, new Date(2026, 0, 1, 12, 0))).toBe(false);
     });
+
+    test('migrates missing surface overrides and validates custom selectors', () => {
+        const settings = createDefaultShiftNovaSettings();
+        const legacyProfile = {...settings.profiles[0]} as Partial<(typeof settings.profiles)[number]>;
+        delete legacyProfile.surfaceOverrides;
+        const migrated = validateShiftNovaSettings({...settings, profiles: [legacyProfile]});
+        expect(migrated.errors).toEqual([]);
+        expect(migrated.settings.profiles[0].surfaceOverrides).toEqual([]);
+
+        settings.profiles[0].surfaceOverrides = [{id: 'modal-color', target: 'custom', color: '#334455', selector: '.modal-especial'}];
+        expect(validateShiftNovaSettings(settings).errors).toEqual([]);
+        settings.profiles[0].surfaceOverrides[0].selector = '.modal { color: red; }';
+        expect(validateShiftNovaSettings(settings).errors.join(' ')).toContain('selector personalizado');
+    });
 });

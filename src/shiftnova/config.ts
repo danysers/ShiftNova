@@ -1,9 +1,11 @@
-import type {AppearanceMode, ShiftNovaSettings, SiteProfile, TimeSettings} from '../definitions';
+import type {AppearanceMode, ShiftNovaSettings, SiteProfile, SurfaceOverride, TimeSettings} from '../definitions';
 import {createDefaultShiftNovaSettings, SHIFTNOVA_SCHEMA_VERSION, SHIFTNOVA_UPDATE_MANIFEST_URL} from './defaults';
+import {isSurfaceTarget} from './surfaces';
 
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 const HOSTNAME = /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i;
 const APPEARANCE_MODES: AppearanceMode[] = ['light', 'dark', 'system', 'schedule'];
+const MAX_SURFACE_OVERRIDES = 24;
 
 export interface ShiftNovaValidationResult {
     settings: ShiftNovaSettings;
@@ -32,6 +34,12 @@ export function normalizePathPrefix(pathPrefix: string): string {
 }
 
 export function normalizeProfile(profile: SiteProfile): SiteProfile {
+    const surfaceOverrides = Array.isArray(profile.surfaceOverrides) ? profile.surfaceOverrides.map((override) => ({
+        id: String(override?.id || '').trim(),
+        target: override?.target,
+        color: String(override?.color || '').trim().toUpperCase(),
+        ...(override?.target === 'custom' ? {selector: String(override.selector || '').trim()} : {}),
+    } as SurfaceOverride)) : [];
     return {
         ...profile,
         id: String(profile.id || '').trim(),
@@ -42,7 +50,12 @@ export function normalizeProfile(profile: SiteProfile): SiteProfile {
             ...profile.palette,
             base: String(profile.palette?.base || '').toUpperCase(),
         },
+        surfaceOverrides,
     };
+}
+
+function isSafeCustomSelector(selector: string): boolean {
+    return selector.length > 0 && selector.length <= 300 && !/[{}\r\n]/.test(selector) && !selector.toLowerCase().includes('</style');
 }
 
 export function getProfileKey(profile: Pick<SiteProfile, 'hostname' | 'pathPrefix'>): string {
@@ -109,7 +122,7 @@ export function validateShiftNovaSettings(input: unknown): ShiftNovaValidationRe
                 return;
             }
             const profile = normalizeProfile(candidate as SiteProfile);
-            const overrideColors = ['header', 'sidebar', 'canvas', 'panels', 'accent'] as const;
+            const overrideColors = ['header', 'sidebar', 'canvas', 'content', 'panels', 'actionBar', 'activeTab', 'border', 'hover', 'focus', 'input', 'accent'] as const;
             if (!profile.id || !profile.name || !HOSTNAME.test(profile.hostname) || !HEX_COLOR.test(profile.palette.base) || !APPEARANCE_MODES.includes(profile.appearance)) {
                 errors.push(`El perfil ${index + 1} contiene campos inválidos.`);
                 return;
@@ -120,6 +133,22 @@ export function validateShiftNovaSettings(input: unknown): ShiftNovaValidationRe
                     errors.push(`El color ${key} del perfil “${profile.name}” no es válido.`);
                     return;
                 }
+            }
+            if (profile.surfaceOverrides.length > MAX_SURFACE_OVERRIDES) {
+                errors.push(`El perfil “${profile.name}” supera el máximo de ${MAX_SURFACE_OVERRIDES} elementos adicionales.`);
+                return;
+            }
+            const surfaceIDs = new Set<string>();
+            for (const override of profile.surfaceOverrides) {
+                if (!override.id || surfaceIDs.has(override.id) || !isSurfaceTarget(override.target) || !HEX_COLOR.test(override.color)) {
+                    errors.push(`Un elemento adicional del perfil “${profile.name}” no es válido.`);
+                    return;
+                }
+                if (override.target === 'custom' && !isSafeCustomSelector(override.selector || '')) {
+                    errors.push(`El selector personalizado del perfil “${profile.name}” no es válido.`);
+                    return;
+                }
+                surfaceIDs.add(override.id);
             }
             const key = getProfileKey(profile);
             if (keys.has(key)) {

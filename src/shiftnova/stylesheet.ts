@@ -1,6 +1,24 @@
+import type {SurfaceOverride} from '../definitions';
+import {getAccessibleText, mixColors} from './palette';
 import type {DerivedPalette} from './palette';
+import {SURFACE_SELECTORS} from './surfaces';
 
-export function createSemanticStylesheet(palette: DerivedPalette, dark: boolean): string {
+function createSurfaceOverrideStyles(overrides: SurfaceOverride[]): string {
+    return overrides.map((override) => {
+        const selector = override.target === 'custom' ? override.selector! : SURFACE_SELECTORS[override.target];
+        const text = getAccessibleText(override.color);
+        const border = mixColors(override.color, text, 0.30);
+        return `
+/* Elemento adicional: ${override.target} */
+${selector} {
+    background-color: ${override.color} !important;
+    border-color: ${border} !important;
+    color: ${text} !important;
+}`;
+    }).join('\n');
+}
+
+export function createSemanticStylesheet(palette: DerivedPalette, dark: boolean, overrides: SurfaceOverride[] = []): string {
     const p = palette;
     return `
 :root {
@@ -127,5 +145,6 @@ option { background-color: var(--shiftnova-input); color: var(--shiftnova-text);
 .alert-warning, .bg-warning, .label-warning, .warning,
 .alert-info, .bg-info, .label-info, .info { color: revert !important; }
 img, svg, canvas, video, iframe { filter: none !important; }
+${createSurfaceOverrideStyles(overrides)}
 `;
 }

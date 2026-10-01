@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "ShiftNova",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "author": "danysers; basado en Dark Reader por Alexander Shutau",
     "description": "Personaliza cualquier sitio con perfiles de color y apariencia clara u oscura.",
     "browser_action": {

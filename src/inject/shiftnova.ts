@@ -31,7 +31,7 @@ function apply(): void {
     }
     const dark = isAppearanceDark(profile.appearance, matchMedia('(prefers-color-scheme: dark)').matches, time);
     const palette = derivePalette(profile.palette, dark);
-    getStyleElement().textContent = createSemanticStylesheet(palette, dark);
+    getStyleElement().textContent = createSemanticStylesheet(palette, dark, profile.surfaceOverrides);
     document.documentElement.dataset.shiftnovaProfile = profile.id;
     document.documentElement.dataset.shiftnovaAppearance = dark ? 'dark' : 'light';
 }
