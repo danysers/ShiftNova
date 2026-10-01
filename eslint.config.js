@@ -4,7 +4,7 @@ import {fixupPluginRules} from '@eslint/compat';
 import eslint from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
 import * as eslintPluginCompat from 'eslint-plugin-compat';
-import * as eslintPluginImport from 'eslint-plugin-import';
+import * as eslintPluginImport from 'eslint-plugin-import-x';
 import globals from 'globals';
 import tslint from 'typescript-eslint';
 import {localRules} from './eslint-plugin-local.js';
@@ -73,6 +73,9 @@ export default tslint.config({
         'no-prototype-builtins': 'off',
         'no-redeclare': 'error',
         'no-useless-concat': 'error',
+        // ESLint 10 enables this rule by default. Keep the legacy codebase's
+        // established checks while avoiding unrelated rewrites during the upgrade.
+        'no-useless-assignment': 'off',
         'no-useless-escape': 'off',
         'no-useless-return': 'error',
         'no-trailing-spaces': 'error',
@@ -145,10 +148,16 @@ export default tslint.config({
             avoidEscape: true,
         }],
 
-        'import/no-duplicates': 'error',
+        'import-x/no-duplicates': 'error',
+        // import-x cannot reliably infer several CommonJS-style exports used by
+        // the inherited build tooling, although Node resolves them correctly.
+        'import-x/default': 'off',
+        'import-x/namespace': 'off',
+        'import-x/no-named-as-default': 'off',
+        'import-x/no-named-as-default-member': 'off',
 
         /*
-        'import/no-unresolved': ['error', {
+        'import-x/no-unresolved': ['error', {
             ignore: [
                 '^generators\/',
                 '^malevic\/',
@@ -158,9 +167,9 @@ export default tslint.config({
             ],
         }],
         */
-        'import/no-unresolved': 'off',
+        'import-x/no-unresolved': 'off',
 
-        'import/no-restricted-paths': ['error', {
+        'import-x/no-restricted-paths': ['error', {
             zones: [{
                 target: './src/inject/',
                 from: './src/background/',
