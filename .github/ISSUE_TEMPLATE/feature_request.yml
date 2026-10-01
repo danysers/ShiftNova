@@ -1,0 +1,24 @@
+name: Proponer una mejora
+description: Sugiere una nueva función o una mejora para ShiftNova.
+title: "[Mejora]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: proposal
+    attributes:
+      label: ¿Qué te gustaría mejorar?
+      description: Explica la idea y qué problema resolvería.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: ¿Cómo imaginas que debería funcionar?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Información adicional
+      description: No incluyas datos personales ni información confidencial.

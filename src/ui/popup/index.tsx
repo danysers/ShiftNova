@@ -1,7 +1,7 @@
 import type {ExtensionData, SemanticPalette, ShiftNovaSettings, SiteProfile, TimeSettings} from '../../definitions';
 import {findMatchingProfile, normalizeHostname, normalizePathPrefix, validateShiftNovaSettings} from '../../shiftnova/config';
 import {createDefaultShiftNovaSettings} from '../../shiftnova/defaults';
-import {compareVersions, parseReleaseManifest} from '../../shiftnova/update';
+import {compareVersions, getUpdateAction, parseReleaseManifest} from '../../shiftnova/update';
 import type {ShiftNovaReleaseManifest} from '../../shiftnova/update';
 import Connector from '../connect/connector';
 
@@ -12,6 +12,23 @@ let updateMessage = 'Todavía no se comprobó la versión publicada.';
 let formMessage = '';
 let ignoreReportsUntil = 0;
 let colorSaveTimer: number | null = null;
+
+const BUG_REPORT_URL = 'https://github.com/danysers/ShiftNova/issues/new?template=bug_report.yml';
+const FEATURE_REQUEST_URL = 'https://github.com/danysers/ShiftNova/issues/new?template=feature_request.yml';
+const UPDATE_HELP_URL = 'https://github.com/danysers/ShiftNova#-cómo-actualizar';
+
+function isFirefoxBrowser(): boolean {
+    return navigator.userAgent.includes('Firefox');
+}
+
+function clampPopupScroll(): void {
+    window.requestAnimationFrame(() => {
+        const maximumScroll = Math.max(0, document.body.scrollHeight - document.body.clientHeight);
+        if (document.body.scrollTop > maximumScroll) {
+            document.body.scrollTop = maximumScroll;
+        }
+    });
+}
 
 function showFormMessage(message: string): void {
     formMessage = message;
@@ -129,10 +146,16 @@ function render(): void {
     const currentURL = getCurrentURL();
     const currentProfile = currentURL ? findMatchingProfile(currentURL.href, data.settings.shiftNova.profiles, true) : null;
     const version = chrome.runtime.getManifest().version;
+    const isFirefox = isFirefoxBrowser();
     const updateAvailable = releaseManifest && compareVersions(releaseManifest.version, version) > 0;
+    const updateAction = releaseManifest && updateAvailable ? getUpdateAction(releaseManifest, isFirefox) : null;
     const releaseButton = releaseManifest ? `
         <button class="secondary" id="open-release">Ver release</button>
-        ${updateAvailable ? '<button id="download-update">Descargar actualización</button>' : ''}` : '';
+        ${updateAction ? `<button id="download-update">${updateAction.label}</button>` : ''}` : '';
+    const updateHint = updateAction?.installsDirectly ?
+        'Firefox solicitará confirmación y reemplazará la versión instalada con el paquete firmado.' : isFirefox ?
+            'La actualización directa en Firefox se habilita cuando la versión publicada incluye un paquete firmado por Mozilla.' :
+            'Chrome, Edge y Opera no permiten que una extensión instalada manualmente se reemplace sola. ShiftNova descargará el paquete y mostrará la guía para completar la recarga.';
     document.body.innerHTML = `
         <main class="app">
             <header class="brand">
@@ -190,6 +213,18 @@ function render(): void {
             </details>
 
             <details>
+                <summary>Ayuda y reportes</summary>
+                <div class="section-content support">
+                    <p>Si encontraste un error o tienes una idea, puedes enviarla al repositorio oficial.</p>
+                    <div class="button-row">
+                        <button id="report-bug">Reportar un error</button>
+                        <button class="secondary" id="suggest-feature">Proponer una mejora</button>
+                    </div>
+                    <p class="hint">Los reportes se guardan públicamente en GitHub Issues. No incluyas contraseñas, datos personales ni información confidencial.</p>
+                </div>
+            </details>
+
+            <details>
                 <summary>Acerca de y actualizaciones</summary>
                 <div class="section-content about">
                     <div><strong>Versión instalada</strong><span>${escapeHTML(version)}</span></div>
@@ -197,12 +232,14 @@ function render(): void {
                     <p>${escapeHTML(updateMessage)}</p>
                     <div class="button-row"><button id="check-updates">Comprobar ahora</button>${releaseButton}</div>
                     <label class="check"><input id="check-on-open" type="checkbox" ${data.settings.shiftNova.updates.checkOnPopupOpen ? 'checked' : ''} /> Comprobar al abrir</label>
-                    <p class="hint">En Chrome, Edge y Opera la descarga se reemplaza manualmente en la página de extensiones. Firefox puede actualizar el XPI firmado desde GitHub Pages.</p>
+                    <p class="hint">${escapeHTML(updateHint)}</p>
+                    <button class="wide ghost" id="update-help">Ver cómo actualizar</button>
                     <p class="attribution">Basado en Dark Reader 4.9.133, licencia MIT. ShiftNova sólo se conecta con el repositorio oficial de GitHub.</p>
                 </div>
             </details>
         </main>`;
     bindEvents(currentProfile);
+    clampPopupScroll();
 }
 
 function rangeMarkup(field: keyof ShiftNovaSettings['darkTheme'], label: string, value: number, min: number, max: number): string {
@@ -269,9 +306,12 @@ function bindEvents(currentProfile: SiteProfile | null): void {
         if (!releaseManifest) {
             return;
         }
-        const isFirefox = navigator.userAgent.includes('Firefox');
-        chrome.tabs.create({url: isFirefox ? releaseManifest.firefoxURL : releaseManifest.chromiumURL});
+        chrome.tabs.create({url: getUpdateAction(releaseManifest, isFirefoxBrowser()).url});
     });
+    document.querySelector('#update-help')?.addEventListener('click', () => chrome.tabs.create({url: UPDATE_HELP_URL}));
+    document.querySelector('#report-bug')?.addEventListener('click', () => chrome.tabs.create({url: BUG_REPORT_URL}));
+    document.querySelector('#suggest-feature')?.addEventListener('click', () => chrome.tabs.create({url: FEATURE_REQUEST_URL}));
+    document.querySelectorAll('details').forEach((details) => details.addEventListener('toggle', clampPopupScroll));
 }
 
 function addProfile(url: URL | null): void {
@@ -280,7 +320,7 @@ function addProfile(url: URL | null): void {
         id: createID(),
         name: url ? `Entorno ${url.hostname}` : 'Nuevo entorno',
         enabled: true,
-        hostname: url?.hostname || 'ejemplo.formosa.gob.ar',
+        hostname: url?.hostname || 'ejemplo.com',
         pathPrefix: url ? normalizePathPrefix(url.pathname) : '/',
         appearance: 'light',
         palette: {base: '#C5D6FF'},

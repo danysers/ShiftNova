@@ -6,6 +6,12 @@ export interface ShiftNovaReleaseManifest {
     publishedAt?: string;
 }
 
+export interface ShiftNovaUpdateAction {
+    url: string;
+    label: string;
+    installsDirectly: boolean;
+}
+
 const VERSION = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
 
 export function compareVersions(first: string, second: string): number {
@@ -29,6 +35,22 @@ export function parseReleaseManifest(value: unknown): ShiftNovaReleaseManifest |
         return null;
     }
     return manifest;
+}
+
+export function getUpdateAction(manifest: ShiftNovaReleaseManifest, isFirefox: boolean): ShiftNovaUpdateAction {
+    const hasSignedFirefoxPackage = isFirefox && /\.xpi(?:$|[?#])/i.test(manifest.firefoxURL);
+    if (hasSignedFirefoxPackage) {
+        return {
+            url: manifest.firefoxURL,
+            label: 'Instalar actualización',
+            installsDirectly: true,
+        };
+    }
+    return {
+        url: isFirefox ? manifest.releaseURL : manifest.chromiumURL,
+        label: isFirefox ? 'Ver descarga disponible' : 'Descargar actualización',
+        installsDirectly: false,
+    };
 }
 
 function isAllowedURL(value: unknown): value is string {

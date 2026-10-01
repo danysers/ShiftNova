@@ -33,6 +33,7 @@ En el ámbito laboral también puede utilizarse para identificar visualmente dis
 - 🖼️ Conserva los colores importantes de avisos, estados, iconos, imágenes y logotipos.
 - 💾 Permite exportar tus perfiles e importarlos en otra computadora.
 - 🔔 Comprueba si existe una versión nueva al abrir la extensión.
+- 🛟 Incluye accesos para reportar errores y proponer mejoras.
 
 > [!IMPORTANT]
 > ShiftNova sólo cambia la apariencia. No modifica datos, no crea registros y no realiza operaciones dentro de los sistemas.

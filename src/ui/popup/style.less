@@ -17,19 +17,27 @@
     color: @text;
 }
 
-html, body {
+html {
     width: 440px;
     min-width: 360px;
-    min-height: 560px;
-    max-height: 680px;
+    margin: 0;
+    overflow: hidden;
+    background: @bg;
+}
+
+body {
+    width: 440px;
+    min-width: 360px;
+    max-height: 600px;
     margin: 0;
     overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     background:
         radial-gradient(circle at 92% -5%, fade(@red, 18%), transparent 36%),
         @bg;
 }
 
-body { overflow-y: auto; }
 button, input, select { font: inherit; }
 
 button {
@@ -133,6 +141,7 @@ summary > span { float: right; padding: 1px 7px; border-radius: 999px; backgroun
 .range output { text-align: right; font-variant-numeric: tabular-nums; }
 .schedule { margin-top: 12px; }
 .hint, .attribution { color: @muted; line-height: 1.45; font-size: 11px; }
+.support > p:first-child { margin-top: 0; color: @muted; }
 .attribution { padding-top: 9px; border-top: 1px solid @border; }
 .button-row { display: flex; flex-wrap: wrap; gap: 7px; }
 .about > div:not(.button-row) { display: flex; justify-content: space-between; padding: 5px 0; }

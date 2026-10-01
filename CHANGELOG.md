@@ -1,3 +1,10 @@
+# ShiftNova 1.0.2 (1 de octubre de 2026)
+
+- Corrige el desplazamiento excesivo del popup al cerrar secciones o actualizar su contenido.
+- Añade un menú de ayuda para reportar errores y proponer mejoras mediante GitHub Issues.
+- Diferencia la instalación directa de Firefox de la descarga asistida para navegadores Chromium.
+- Generaliza la descripción para dejar claro que ShiftNova puede usarse en cualquier sitio web.
+
 # ShiftNova 1.0.1 (1 de octubre de 2026)
 
 - Refuerza la paleta clara y cubre superficies FlexGrid, FlexForm, navegación y contenido dinámico de SIARH.

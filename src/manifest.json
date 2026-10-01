@@ -1,9 +1,9 @@
 {
     "manifest_version": 2,
     "name": "ShiftNova",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "author": "danysers; basado en Dark Reader por Alexander Shutau",
-    "description": "Identifica cada entorno por URL y aplica una paleta semántica clara u oscura.",
+    "description": "Personaliza cualquier sitio con perfiles de color y apariencia clara u oscura.",
     "browser_action": {
         "default_title": "ShiftNova",
         "default_icon": {

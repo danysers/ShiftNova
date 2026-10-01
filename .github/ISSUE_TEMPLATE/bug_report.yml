@@ -1,0 +1,70 @@
+name: Reportar un error
+description: Informa un problema de funcionamiento o de apariencia en ShiftNova.
+title: "[Error]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por ayudar a mejorar ShiftNova. No publiques contraseñas, datos personales ni información confidencial.
+  - type: textarea
+    id: description
+    attributes:
+      label: ¿Qué ocurrió?
+      description: Describe el problema de la forma más clara posible.
+      placeholder: Al abrir/cambiar/cerrar..., ShiftNova...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducirlo
+      description: Indica qué hiciste antes de que apareciera el problema.
+      placeholder: |
+        1. Abrí...
+        2. Elegí...
+        3. Ocurrió...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: ¿Qué esperabas que ocurriera?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versión de ShiftNova
+      placeholder: Ejemplo: 1.0.2
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Navegador
+      options:
+        - Google Chrome
+        - Microsoft Edge
+        - Opera u Opera GX
+        - Mozilla Firefox
+        - Otro
+    validations:
+      required: true
+  - type: dropdown
+    id: system
+    attributes:
+      label: Sistema operativo
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Otro
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Capturas o información adicional
+      description: Puedes arrastrar aquí capturas que no contengan información sensible.
