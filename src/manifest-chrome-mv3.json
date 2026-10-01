@@ -1,0 +1,68 @@
+{
+    "manifest_version": 3,
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsD+pYVlX1CZFCKAfvvxV6+oUOVUN8t4zR8s6Qnk91CSg/O8eIvd+kWDi5rPM+Vjvgae52PUBP2p4KOUWCzbsTK6eS1hwRBNwBIiaTHn1VbnpR85tFGlwbFbPpAkVPRHYyXWSX3q3gfzeL0Km1ZO/n8DiIhGgBSCvDDltePhQPudPe9jSZoxjFptuc7tg9p1X8mtmybhA0vJ9VUjygwbkhpWzIc3eMeyWbaWHYaRA7UB8GxyHNVm2DXCNdsLV5cubgKWzEc35NrqVMNrdB7m/Zc3xoR+0x3vY/jvAtTj3Rx/14sS/f14KU1FTpPARtnU9QuOIMJ9/G9geyk4h5JW69QIDAQAB",
+    "minimum_chrome_version": "106.0.0.0",
+    "action": {
+        "default_title": "ShiftNova",
+        "default_icon": {
+            "38": "icons/shiftnova_38.png",
+            "19": "icons/shiftnova_19.png"
+        },
+        "default_popup": "ui/popup/index.html"
+    },
+    "background": {
+        "service_worker": "background/index.js"
+    },
+    "content_security_policy": {
+        "extension_pages": "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://danysers.github.io; navigate-to 'self' https://github.com/danysers/ShiftNova/*; media-src 'none'; child-src 'none'; worker-src 'none'; object-src 'none'"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "inject/proxy.js"
+            ],
+            "run_at": "document_start",
+            "all_frames": true,
+            "match_about_blank": true,
+            "world": "MAIN"
+        },
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "inject/fallback.js",
+                "inject/shiftnova.js",
+                "inject/index.js"
+            ],
+            "run_at": "document_start",
+            "all_frames": true,
+            "match_about_blank": true,
+            "world": "ISOLATED"
+        },
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "inject/color-scheme-watcher.js"
+            ],
+            "run_at": "document_idle",
+            "all_frames": false,
+            "match_about_blank": false,
+            "world": "ISOLATED"
+        }
+    ],
+    "permissions": [
+        "alarms",
+        "fontSettings",
+        "scripting",
+        "storage"
+    ],
+    "host_permissions": [
+        "*://*/*"
+    ]
+}
